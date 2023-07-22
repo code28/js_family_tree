@@ -690,14 +690,42 @@ class FTDrawer {
 
     static default_tooltip_func(node) {
         if (node.is_union()) return;
-        var content = `
-                <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
-                <table style="margin-top: 2.5px;">
-                        <tr><td>born</td><td>` + (node.get_birth_year() || "?") + ` in ` + (node.data.birthplace || "?") + `</td></tr>
-                        <tr><td>died</td><td>` + (node.get_death_year() || "?") + ` in ` + (node.data.deathplace || "?") + `</td></tr>
-                </table>
-                `
-        return content.replace(new RegExp("null", "g"), "?");
+        // var content = `
+        //         <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
+        //         <table style="margin-top: 2.5px;">
+        //                 <tr><td>born</td><td>` + (node.get_birth_year() || "?") + ` in ` + (node.data.birthplace || "?") + `</td></tr>
+        //                 <tr><td>died</td><td>` + (node.get_death_year() || "?") + ` in ` + (node.data.deathplace || "?") + `</td></tr>
+        //         </table>
+        //         `
+        let content = `
+            <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
+            <table style="margin-top: 2.5px;">
+            `;
+
+        let born;
+        if (node.get_birth_year()) {
+            born = node.get_birth_year();
+        }
+        if (node.get_birth_place()) {
+            born += " in " + node.get_birth_place();
+        }
+        if (born) {
+            content += `<tr><td>*</td><td>` + born + `</td></tr>`;
+        }
+
+        let died;
+        if (node.get_death_year()) {
+            died = node.get_death_year();
+        }
+        if (node.get_death_place()) {
+            died += " in " + node.get_death_place();
+        }
+        if (died) {
+            content += `<tr><td>&dagger;</td><td>` + died + `</td></tr>`;
+        }
+        if (!born && !died) { return; }
+        return content + `</table>`;
+        // return content.replace(new RegExp("null", "g"), "?");
     };
 
     tooltip(tooltip_func) {
@@ -715,9 +743,17 @@ class FTDrawer {
         // node label function
         // text will be split into multiple lines where `label_delimiter` is used
         if (node.is_union()) return;
-        return node.get_name() +
-            FTDrawer.label_delimiter +
-            (node.get_birth_year() || "?") + " - " + (node.get_death_year() || "?");
+        let label = node.get_name();
+        // if (node.get_birth_year()) {
+        //     label += FTDrawer.label_delimiter + "* " + node.get_birth_year();
+        // }
+        // if (node.get_death_year()) {
+        //     label += FTDrawer.label_delimiter + "† " + node.get_death_year();
+        // }
+        return label;
+        // return node.get_name() +
+        //     FTDrawer.label_delimiter +
+        //     (node.get_birth_year() || "?") + " +-+ " + (node.get_death_year() || "?");
     };
 
     node_label(node_label_func) {
@@ -821,21 +857,23 @@ class FTDrawer {
         if (this.show_tooltips) {
             const tooltip_div = this._tooltip_div,
                 tooltip_func = this._tooltip_func;
-            nodeEnter
-                .on("mouseover", function (event, d) {
-                    tooltip_div.transition()
-                        .duration(200)
-                        .style("opacity", undefined);
-                    tooltip_div.html(tooltip_func(d));
-                    let height = tooltip_div.node().getBoundingClientRect().height;
-                    tooltip_div.style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY-height/2) + "px");
-                })
-                .on("mouseout", function (d) {
-                    tooltip_div.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
+                nodeEnter
+                    .on("mouseover", function (event, d) {
+                        const body = tooltip_func(d);
+                        if (!body) { return; }
+                        tooltip_div.transition()
+                            .duration(200)
+                            .style("opacity", undefined);
+                        tooltip_div.html(body);
+                        let height = tooltip_div.node().getBoundingClientRect().height;
+                        tooltip_div.style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY-height/2) + "px");
+                    })
+                    .on("mouseout", function (d) {
+                        tooltip_div.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
         };
 
         // add a circle for each node
