@@ -392,7 +392,7 @@ class Person extends FTNode {
     };
 
     get_birth_year() {
-        return this.data.birthyear;
+        return this.data.birthyear === null ? null : new Date(this.data.birthyear);
     };
 
     get_birth_place() {
@@ -400,7 +400,7 @@ class Person extends FTNode {
     };
 
     get_death_year() {
-        return this.data.deathyear;
+        return this.data.deathyear === null ? null : new Date(this.data.deathyear);
     };
 
     get_death_place() {
@@ -489,7 +489,7 @@ class Person extends FTNode {
         this.get_own_unions().forEach(
                 u => children = children.concat(getChildren(u))
             )
-            // sort children by birth year, filter undefined
+        // sort children by birth year, filter undefined
         children = children
             .filter(c => c != undefined)
             // .sort((a, b) => Math.sign((getBirthYear(a) || 0) - (getBirthYear(b) || 0)));
@@ -690,13 +690,7 @@ class FTDrawer {
 
     static default_tooltip_func(node) {
         if (node.is_union()) return;
-        // var content = `
-        //         <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
-        //         <table style="margin-top: 2.5px;">
-        //                 <tr><td>born</td><td>` + (node.get_birth_year() || "?") + ` in ` + (node.data.birthplace || "?") + `</td></tr>
-        //                 <tr><td>died</td><td>` + (node.get_death_year() || "?") + ` in ` + (node.data.deathplace || "?") + `</td></tr>
-        //         </table>
-        //         `
+
         let content = `
             <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
             <table style="margin-top: 2.5px;">
@@ -704,7 +698,7 @@ class FTDrawer {
 
         let born;
         if (node.get_birth_year()) {
-            born = node.get_birth_year();
+            born = node.get_birth_year().toLocaleDateString();
         }
         if (node.get_birth_place()) {
             born += " in " + node.get_birth_place();
@@ -715,7 +709,7 @@ class FTDrawer {
 
         let died;
         if (node.get_death_year()) {
-            died = node.get_death_year();
+            died = node.get_death_year().toLocaleDateString();
         }
         if (node.get_death_place()) {
             died += " in " + node.get_death_place();
@@ -725,7 +719,6 @@ class FTDrawer {
         }
         if (!born && !died) { return; }
         return content + `</table>`;
-        // return content.replace(new RegExp("null", "g"), "?");
     };
 
     tooltip(tooltip_func) {
@@ -743,17 +736,21 @@ class FTDrawer {
         // node label function
         // text will be split into multiple lines where `label_delimiter` is used
         if (node.is_union()) return;
+
         let label = node.get_name();
-        // if (node.get_birth_year()) {
-        //     label += FTDrawer.label_delimiter + "* " + node.get_birth_year();
-        // }
-        // if (node.get_death_year()) {
-        //     label += FTDrawer.label_delimiter + "† " + node.get_death_year();
-        // }
+
+        const birthday = node.get_birth_year() === null ? null : node.get_birth_year().getFullYear();
+        const deathday = node.get_death_year() === null ? null : node.get_death_year().getFullYear();
+        if (birthday && deathday) {
+            label += FTDrawer.label_delimiter + birthday + " - " + deathday;
+        }
+        else if (birthday) {
+            label += FTDrawer.label_delimiter + "* " + birthday;
+        }
+        else if (deathday) {
+            label += FTDrawer.label_delimiter + "† " + deathday;
+        }
         return label;
-        // return node.get_name() +
-        //     FTDrawer.label_delimiter +
-        //     (node.get_birth_year() || "?") + " +-+ " + (node.get_death_year() || "?");
     };
 
     node_label(node_label_func) {
