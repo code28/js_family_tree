@@ -863,7 +863,7 @@ class FTDrawer {
                             .style("opacity", undefined);
                         tooltip_div.html(body);
                         let height = tooltip_div.node().getBoundingClientRect().height;
-                        tooltip_div.style("left", (event.pageX + 10) + "px")
+                        tooltip_div.style("left", (event.pageX + 20) + "px")
                             .style("top", (event.pageY-height/2) + "px");
                     })
                     .on("mouseout", function (d) {
