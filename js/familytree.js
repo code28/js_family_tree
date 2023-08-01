@@ -325,6 +325,14 @@ class Union extends FTNode {
         return true;
     };
 
+    is_married() {
+        return this.data.isMarried;
+    }
+
+    marriage_date() {
+        return this.data.marriageDate === null ? null : new Date(this.data.marriageDate);
+    }
+
     add_parent(person_data) {
         // make person object
         const id = person_data.id || "p" + ++this.ft_datahandler.number_nodes;
@@ -689,7 +697,12 @@ class FTDrawer {
     };
 
     static default_tooltip_func(node) {
-        if (node.is_union()) return;
+        if (node.is_union()) {
+            if (node.is_married() && node.marriage_date()) {
+                return "<b>Hochzeit</b><br>am " + node.marriage_date().toLocaleDateString();
+            }
+            return;
+        }
 
         let content = `
             <span style='margin-left: 2.5px;'><b>` + node.get_name() + `</b></span><br>
@@ -763,8 +776,12 @@ class FTDrawer {
         // returns a node's css classes as a string
         if (node.is_union()) return;
         else {
-            if (node.is_extendable()) return "person extendable"
-            else return "person non-extendable"
+            let classes = "person";
+            classes += (node.is_extendable() ? " pointer " : " non-") + "extendable";
+            if (node.get_visible_inserted_own_unions().length > 0 || node.get_visible_inserted_parent_unions().length > 0) {
+                classes += " pointer";
+            }
+            return classes;
         };
     };
 
@@ -776,8 +793,9 @@ class FTDrawer {
 
     static default_node_size_func(node) {
         // returns an integer determining the node's size
-        if (node.is_union()) return 0;
-        else return 10;
+        if (node.is_union()) {
+            return node.is_married() ? 4 : 0;
+        } else return 10;
     }
 
     node_size(node_size_func) {
@@ -900,8 +918,7 @@ class FTDrawer {
         // update node style
         nodeUpdate.select('.node circle')
             .attr('r', this.node_size_func)
-            .attr('class', this.node_class_func)
-            .attr('cursor', 'pointer');
+            .attr('class', this.node_class_func);
 
         // remove hidden nodes
         var nodeExit = node.exit().transition()

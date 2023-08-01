@@ -35,3 +35,7 @@ body {
     color: #fff;
     border-radius: 2px;
 }
+
+.pointer {
+    cursor: pointer;
+}
